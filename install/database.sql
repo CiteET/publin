@@ -40,6 +40,22 @@ CREATE TABLE `authors` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `citations`
+--
+
+DROP TABLE IF EXISTS `citations`;
+CREATE TABLE `citations` (
+  `id`             int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `publication_id` int(11) unsigned NOT NULL,
+  `citation`       int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`)
+)
+  ENGINE=MyISAM
+  AUTO_INCREMENT=1
+  DEFAULT CHARSET=utf8
+  COMMENT='Stores all citations';
+
+--
 -- Table structure for table `files`
 --
 
@@ -185,6 +201,7 @@ CREATE TABLE `publications` (
   `howpublished`   VARCHAR(200)              DEFAULT NULL,
   `abstract`       TEXT,
   `copyright`      VARCHAR(200)              DEFAULT NULL,
+  `foreign`        tinyint(1)       NOT NULL DEFAULT '0'  COMMENT 'True for foreign publications',
   PRIMARY KEY (`id`),
   UNIQUE KEY `title` (`title`),
   KEY `publication_to_type_idx` (`type_id`),
