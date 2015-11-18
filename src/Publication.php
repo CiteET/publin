@@ -43,6 +43,7 @@ class Publication extends Entity {
 	protected $files;
 	protected $full_text_file;
 	protected $urls;
+	protected $foreign;
 
 
 	/**
@@ -495,5 +496,13 @@ class Publication extends Entity {
 	public function getPublinUrl() {
 
 		return Request::createUrl(array('p' => 'publication', 'id' => $this->id));
+	}
+	
+	
+	/**
+	 * @return int 0 or 1
+	 */
+	public function getForeign() {
+		return $this->foreign;
 	}
 }
