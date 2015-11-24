@@ -207,6 +207,28 @@ class PublicationController extends Controller {
 
 		return $this->model->removeAuthor($id, $author_id);
 	}
+	
+	/** @noinspection PhpUnusedPrivateMethodInspection
+	 * @param Request $request
+	 *
+	 * @return bool
+	 * @throws PermissionRequiredException
+	 * @throws exceptions\LoginRequiredException
+	 */
+	private function removeCitation(Request $request) {
+
+		if (!$this->auth->checkPermission(Auth::EDIT_PUBLICATION)) {
+			throw new PermissionRequiredException(Auth::EDIT_PUBLICATION);
+		}
+
+		$id = Validator::sanitizeNumber($request->get('id'));
+		$citation_id = Validator::sanitizeNumber($request->post('citation_id'));
+		if (!$id || !$citation_id) {
+			throw new UnexpectedValueException;
+		}
+
+		return $this->model->removeCitation($id, $citation_id);
+	}
 
 
 	/** @noinspection PhpUnusedPrivateMethodInspection
@@ -252,7 +274,7 @@ class PublicationController extends Controller {
 			return false;
 		}
 	}
-
+	
 
 	/** @noinspection PhpUnusedPrivateMethodInspection
 	 * @param Request $request

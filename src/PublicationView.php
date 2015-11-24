@@ -166,6 +166,36 @@ class PublicationView extends View {
 		}
 		return $result;
 	}
+	
+	/**
+	 * @return string
+	 */
+	public function showEditCitations() {
+
+		$citations = $this->publication->getCitations();
+		$string = '';
+
+		foreach ($citations as $citation) {
+			$string .= '<li>
+						<form action="#" method="post" accept-charset="utf-8">
+						'.$this->html($citation->getCitationPublication()->getTitle()).'
+						<input type="hidden" name="citation_id" value="'.$this->html($citation->getId()).'"/>
+						<input type="hidden" name="action" value="removeCitation"/>
+						<input type="submit" value="x"/>
+						</form>
+						</li>';
+		}
+		/*
+		$string .= '<li>
+					<form action="#" method="post" accept-charset="utf-8">
+					<input type="text" name="title" placeholder="Title" />
+					<input type="hidden" name="action" value="addCitation"/>
+					<input type="submit" value="Add"/>
+					</form>
+					</li>';
+		*/
+		return $string;
+	}
 
 	/**
 	 * Shows the publication's publish date.
