@@ -263,4 +263,26 @@ class SubmitView extends View {
 
 		return $string;
 	}
+	
+
+	/**
+	 * @return string
+	 */
+	public function listCitations() {
+
+		$string = '';
+		$citations = $this->show('citations');
+		if ($citations) {
+			foreach ($citations as $key => $value) {
+				// TODO: insert ID for the value
+				$string .= '<li class="multi-field">
+				<input type="hidden" name="citations['.$key.'][citation_id] value="TODO" />
+				<em>'.$this->show('citations', $key, 'title').'</em>
+				<button type="button" class="remove-field">x</button>
+				</li>';
+			}
+		}
+
+		return $string;
+	}
 }

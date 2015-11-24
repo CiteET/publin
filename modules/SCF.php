@@ -29,7 +29,8 @@ class SCF extends Module {
 			'publisher'     => 'publisher',
 			'date'			=> 'date_published',
 			'abstract'		=> 'abstract',
-			'source'		=> 'url'
+			'source'		=> 'url',
+			'citation'		=> 'citations'
 		);
 	}
 	
@@ -82,6 +83,57 @@ class SCF extends Module {
 	
 	/**
 	 * 
+	 * @param array $entry
+	 * @return array
+	 */
+	private function extractEntry(array $entry) {
+		// If we get muliple entries, we have a publication tag, otherwise not
+		if (array_key_exists('publication', $entry)) {
+			$entry = $entry['publication'];
+			if (!is_array($entry)) {
+				return false;
+			}
+		}
+
+		$result_entry = array();
+
+		foreach ($entry as $tmp) {
+			$scf_field = key($tmp);
+			if (isset($this->fields[$scf_field])) {
+				$your_field = $this->fields[$scf_field];						
+				$value = $tmp[$scf_field];
+				if ($value) {
+					if ($scf_field == 'author') {
+						// Create array
+						if (!array_key_exists($your_field, $result_entry)) {
+							$result_entry[$your_field] = array();
+						}
+						$result_entry[$your_field][] = self::extractAuthor($value);
+					}
+					else if($scf_field == 'date') {
+						$result_entry[$your_field] = self::extractDate($value);
+					}
+					else if($scf_field == 'citation') {
+						// Create array
+						if (!array_key_exists($your_field, $result_entry)) {
+							$result_entry[$your_field] = array();
+						}
+						// TODO: may check if entry is valid (not false)
+						$result_entry[$your_field][] = self::extractEntry($value);
+					}
+					/* The rest */
+					else {
+						$result_entry[$your_field] = $value;
+					}
+				}						
+			}
+		}
+		
+		return $result_entry;
+	}
+	
+	/**
+	 * 
 	 * @param string $input
 	 * @return array
 	 */
@@ -90,35 +142,18 @@ class SCF extends Module {
 		$entries = $parser->data;
 		
 		$result = array();
-		//var_dump($entries);
 		foreach ($entries as $entry) {
-			$entry = $entry['publication'];
-			if (is_array($entry)) {
-				$result_entry = array();
-				$result_entry['authors'] = array();
-
-				foreach ($entry as $tmp) {
-					$scf_field = key($tmp);
-					if (isset($this->fields[$scf_field])) {
-						$your_field = $this->fields[$scf_field];						
-						$value = $tmp[$scf_field];
-						if ($value) {
-							if ($scf_field == 'author') {
-								$result_entry[$your_field][] = self::extractAuthor($value);
-							}
-							else if($scf_field == 'date') {
-								$result_entry[$your_field] = self::extractDate($value);
-							}
-							/* The rest */
-							else {
-								$result_entry[$your_field] = $value;
-							}
-						}						
+			$result_entry = self::extractEntry($entry);
+			if ($result_entry) {
+				// First add citations
+				if (array_key_exists('citations', $result_entry)) {
+					foreach ($result_entry['citations'] as $citation) {
+						$result[] = $citation;
 					}
 				}
-
-				$result[] = $result_entry;				
-			}			
+				// Add the entry
+				$result[] = $result_entry;
+			}
 		}
 		if (count($result) == 0) {
 			return false;
