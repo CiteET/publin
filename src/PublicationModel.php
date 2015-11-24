@@ -212,6 +212,11 @@ VALUES
 			$this->db->prepare($query);
 			$this->db->bindValue(':id', (int)$id);
 			$this->db->execute();
+			
+			$query = 'DELETE FROM `citations` WHERE `publication_id` = :id;';
+			$this->db->prepare($query);
+			$this->db->bindValue(':id', (int)$id);
+			$this->db->execute();
 
 			$query = 'DELETE FROM `publications` WHERE `id` = :id;';
 			$this->db->prepare($query);
