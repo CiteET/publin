@@ -101,7 +101,30 @@ VALUES
 
 		return $this->db->lastInsertId();
 	}
+	
+	/**
+	 * @param $publication_id
+	 * @param $citation_id
+	 *
+	 * @return string
+	 * @throws exceptions\DBDuplicateEntryException
+	 * @throws exceptions\DBForeignKeyException
+	 */
+	public function addCitation($publication_id, $citation_id) {
 
+		if (!is_numeric($publication_id) || !is_numeric($citation_id)) {
+			throw new InvalidArgumentException('params should be numeric');
+		}
+
+		$query = 'INSERT INTO `citations` (`publication_id`, `citation_id`) VALUES (:publication_id, :citation_id);';
+		$this->db->prepare($query);
+		$this->db->bindValue(':publication_id', $publication_id);
+		$this->db->bindValue(':citation_id', $citation_id);
+		$this->db->execute();
+
+		return $this->db->lastInsertId();
+	}
+	
 
 	/**
 	 * @param $publication_id
