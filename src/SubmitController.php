@@ -84,12 +84,20 @@ class SubmitController extends Controller {
 	 */
 	private function import(Request $request) {
 
-		$input = Validator::sanitizeText($request->post('input'));
 		$format = Validator::sanitizeText($request->post('format'));
+		// The method sanitizeText calls the function PHP function strip_tags,
+		// which strips all HTML and PHP tags. Hence this function also removes
+		// XML tags.
+		if ($format != 'DublinCoreXML') {
+			$input = Validator::sanitizeText($request->post('input'));
+		} else {
+			$input = $request->post('input');
+		}
 
 		if ($input && $format) {
 			$entries = FormatHandler::import($input, $format);
 			$_SESSION['input_raw'] = $input;
+			$_SESSION['input_format'] = $format;
 
 			$this->setInputAndRestInSession($entries);
 

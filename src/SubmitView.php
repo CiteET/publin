@@ -72,6 +72,25 @@ class SubmitView extends View {
 			return false;
 		}
 	}
+	
+
+	/**
+	 * 
+	 * @param string $format
+	 * @param string $name
+	 * @return string
+	 */
+	public function showImportFormat($format, $name) {
+		$string = '<option value="'.$format.'"';
+		if (isset($_SESSION['input_format'])) {
+			if ($format == $_SESSION['input_format']) {
+				$string .= ' selected';
+			}
+		}
+		$string .= '>'.$name.'</option>';
+		
+		return $string;
+	}
 
 
 	/**
