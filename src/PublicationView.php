@@ -184,9 +184,10 @@ class PublicationView extends View {
 		$string = '';
 
 		foreach ($citations as $citation) {
+			$citationPublication = $citation->getCitationPublication();
 			$string .= '<li>
 						<form action="#" method="post" accept-charset="utf-8">
-						'.$this->html($citation->getCitationPublication()->getTitle()).'
+						<a href="?p=publication&m=edit&id='.$this->html($citation->getCitationId()).'">'.$this->html($citationPublication->getTitle()).'</a>
 						<input type="hidden" name="citation_id" value="'.$this->html($citation->getId()).'"/>
 						<input type="hidden" name="action" value="removeCitation"/>
 						<input type="submit" value="x"/>
