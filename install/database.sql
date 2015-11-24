@@ -47,8 +47,9 @@ DROP TABLE IF EXISTS `citations`;
 CREATE TABLE `citations` (
   `id`             int(11) unsigned NOT NULL AUTO_INCREMENT,
   `publication_id` int(11) unsigned NOT NULL,
-  `citation`       int(11) unsigned NOT NULL,
+  `citation_id`    int(11) unsigned NOT NULL,
   PRIMARY KEY (`id`)
+  UNIQUE KEY `unique_entries` (`publication_id`,`citation_id`)
 )
   ENGINE=MyISAM
   AUTO_INCREMENT=1
