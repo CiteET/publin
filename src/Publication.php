@@ -539,6 +539,12 @@ class Publication extends Entity {
 	 * @return int 0 or 1
 	 */
 	public function getForeign() {
-		return $this->foreign;
+		// For the foreign attribute a checkbox is used. If the checkbox is not
+		// set, we do not get a value. Hence set it to the dafault value.
+		if (isset($this->foreign)) {
+			return $this->foreign;
+		} else {
+			return 0;
+		}
 	}
 }
