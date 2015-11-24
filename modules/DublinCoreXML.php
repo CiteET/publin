@@ -61,10 +61,4 @@ class DublinCoreXML extends Module {
 
 		return $fields;
 	}
-	
-	
-	public function import($input) {
-		// TODO import here
-		return array();
-	}
 }

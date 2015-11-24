@@ -88,7 +88,7 @@ class SubmitController extends Controller {
 		// The method sanitizeText calls the function PHP function strip_tags,
 		// which strips all HTML and PHP tags. Hence this function also removes
 		// XML tags.
-		if ($format != 'DublinCoreXML') {
+		if ($format != 'SCF') {
 			$input = Validator::sanitizeText($request->post('input'));
 		} else {
 			$input = $request->post('input');
