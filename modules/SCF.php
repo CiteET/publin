@@ -3,12 +3,8 @@
 
 namespace publin\modules;
 
-use DOMDocument;
-use publin\modules\scf\xml;
-use publin\src\Publication;
-
 /**
- * Class DublinCoreXML
+ * Class SCF
  *
  * @package publin\modules
  */
@@ -24,12 +20,23 @@ class SCF extends Module {
 		/* Map your fields here. You can change the order or leave out fields. */
 		$this->fields = array(
 			/* scf field => your field */
+			'type'			=> 'type',
 			'author'		=> 'authors',
 			'title'			=> 'title',
+			'journal'		=> 'journal',
+			'booktitle'		=> 'booktitle',
 			'publisher'     => 'publisher',
-			'date'			=> 'date_published',
+			'year'			=> 'date_published',
+			'volume'		=> 'volume',
+			'pages_from'	=> 'pages_from',
+			'pages_to'		=> 'pages_to',			
+			'number'		=> 'number',
+			'series'		=> 'series',
 			'abstract'		=> 'abstract',
-			'source'		=> 'url',
+			'copyright'		=> 'copyright',
+			'url'			=> 'url',
+			'doi'			=> 'doi',
+			'isbn'			=> 'isbn',
 			'citation'		=> 'citations'
 		);
 	}
@@ -87,21 +94,11 @@ class SCF extends Module {
 	 * @return array
 	 */
 	private function extractEntry(array $entry) {
-		// If we get muliple entries, we have a publication tag, otherwise not
-		if (array_key_exists('publication', $entry)) {
-			$entry = $entry['publication'];
-			if (!is_array($entry)) {
-				return false;
-			}
-		}
-
 		$result_entry = array();
 
-		foreach ($entry as $tmp) {
-			$scf_field = key($tmp);
+		foreach ($entry as $scf_field => $value) {
 			if (isset($this->fields[$scf_field])) {
 				$your_field = $this->fields[$scf_field];						
-				$value = $tmp[$scf_field];
 				if ($value) {
 					if ($scf_field == 'author') {
 						// Create array
@@ -110,7 +107,7 @@ class SCF extends Module {
 						}
 						$result_entry[$your_field][] = self::extractAuthor($value);
 					}
-					else if($scf_field == 'date') {
+					else if($scf_field == 'year') {
 						$result_entry[$your_field] = self::extractDate($value);
 					}
 					else if($scf_field == 'citation') {
@@ -138,9 +135,14 @@ class SCF extends Module {
 	 * @return array
 	 */
 	public function import($input) {
-		$parser = new xml($input);
-		$entries = $parser->data;
-		
+		// Check if string starts with a '{'. In that case $input is a single
+		// object and not a array
+		if (strpos($input, '{') == 0) {
+			// Convert to array
+			$input = '['.$input.']';
+		}
+		$entries = json_decode($input, $assoc = TRUE);
+
 		$result = array();
 		foreach ($entries as $entry) {
 			$result_entry = self::extractEntry($entry);
