@@ -3,6 +3,10 @@
 
 namespace publin\modules;
 
+class ScfInvalidFormatException extends \Exception {
+}
+
+
 /**
  * Class SCF
  *
@@ -21,9 +25,9 @@ class SCF extends Module {
 		$this->fields = array(
 			/* scf field => your field */
 			'type'			=> 'type',
-			'author'		=> 'authors',
+			'authors'		=> 'authors',
 			'title'			=> 'title',
-			'journal'		=> 'journal',
+			'journal_name'	=> 'journal',
 			'booktitle'		=> 'booktitle',
 			'publisher'     => 'publisher',
 			'year'			=> 'date_published',
@@ -37,6 +41,7 @@ class SCF extends Module {
 			'url'			=> 'url',
 			'doi'			=> 'doi',
 			'isbn'			=> 'isbn',
+			'keywords'		=> 'keywords',
 			'citation'		=> 'citations'
 		);
 	}
@@ -100,12 +105,11 @@ class SCF extends Module {
 			if (isset($this->fields[$scf_field])) {
 				$your_field = $this->fields[$scf_field];						
 				if ($value) {
-					if ($scf_field == 'author') {
-						// Create array
-						if (!array_key_exists($your_field, $result_entry)) {
-							$result_entry[$your_field] = array();
+					if ($scf_field == 'authors') {
+						$result_entry[$your_field] = array();
+						foreach ($value as $author_name) {
+							$result_entry[$your_field][] = self::extractAuthor($author_name);							
 						}
-						$result_entry[$your_field][] = self::extractAuthor($value);
 					}
 					else if($scf_field == 'year') {
 						$result_entry[$your_field] = self::extractDate($value);
@@ -142,7 +146,10 @@ class SCF extends Module {
 			$input = '['.$input.']';
 		}
 		$entries = json_decode($input, $assoc = TRUE);
-
+		if (!$entries) {
+			throw new ScfInvalidFormatException('Input is no valid JSON. JSON error code: '.json_last_error());
+		}			
+		
 		$result = array();
 		foreach ($entries as $entry) {
 			$result_entry = self::extractEntry($entry);
