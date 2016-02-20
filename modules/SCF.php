@@ -42,7 +42,7 @@ class SCF extends Module {
 			'doi'			=> 'doi',
 			'isbn'			=> 'isbn',
 			'keywords'		=> 'keywords',
-			'citation'		=> 'citations'
+			'citations'		=> 'citations'
 		);
 	}
 	
@@ -114,14 +114,6 @@ class SCF extends Module {
 					else if($scf_field == 'year') {
 						$result_entry[$your_field] = self::extractDate($value);
 					}
-					else if($scf_field == 'citation') {
-						// Create array
-						if (!array_key_exists($your_field, $result_entry)) {
-							$result_entry[$your_field] = array();
-						}
-						// TODO: may check if entry is valid (not false)
-						$result_entry[$your_field][] = self::extractEntry($value);
-					}
 					/* The rest */
 					else {
 						$result_entry[$your_field] = $value;
@@ -152,17 +144,16 @@ class SCF extends Module {
 		
 		$result = array();
 		foreach ($entries as $entry) {
-			$result_entry = self::extractEntry($entry);
-			if ($result_entry) {
-				// First add citations
-				if (array_key_exists('citations', $result_entry)) {
-					foreach ($result_entry['citations'] as $citation) {
-						$result[] = $citation;
-					}
+			if (array_key_exists('citations', $entry)) {
+				foreach ($entry['citations'] as $key => $citation) {
+					$citation_entry = self::extractEntry($citation);
+					$entry['citations'][$key] = $citation_entry['title'];
+					$result[] = $citation_entry;
 				}
-				// Add the entry
-				$result[] = $result_entry;
-			}
+			}			
+			
+			// Add the entry
+			$result[] = self::extractEntry($entry);
 		}
 		if (count($result) == 0) {
 			return false;
