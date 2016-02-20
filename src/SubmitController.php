@@ -88,19 +88,23 @@ class SubmitController extends Controller {
 		$input = $request->post('input');
 
 		if ($input && $format) {
-			$entries = FormatHandler::import($input, $format);
-			$_SESSION['input_raw'] = $input;
-			$_SESSION['input_format'] = $format;
+			try {
+				$entries = FormatHandler::import($input, $format);
+				$_SESSION['input_raw'] = $input;
+				$_SESSION['input_format'] = $format;
 
-			$this->setInputAndRestInSession($entries);
+				$this->setInputAndRestInSession($entries);
 
-			return true;
+				return true;
+			} catch (Exception $e) {
+				$this->errors[] = $e->getMessage();
+			}
 		}
 		else {
 			$this->errors[] = 'No input to import given';
-
-			return false;
 		}
+		
+		return false;
 	}
 
 
