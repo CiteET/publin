@@ -276,8 +276,8 @@ class SubmitView extends View {
 			foreach ($citations as $key => $value) {
 				// TODO: insert ID for the value
 				$string .= '<li class="multi-field">
-				<input type="hidden" name="citations['.$key.'][citation_id] value="TODO" />
-				<em>'.$this->show('citations', $key, 'title').'</em>
+				<input type="hidden" name="citations[]" value="'.$this->show('citations', $key).'" />
+				<em>'.$this->show('citations', $key).'</em>
 				<button type="button" class="remove-field">x</button>
 				</li>';
 			}

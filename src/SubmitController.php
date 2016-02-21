@@ -168,6 +168,21 @@ class SubmitController extends Controller {
 			$this->errors[] = 'At least one author is required';
 		}
 
+		$citations = array();
+		if (!empty($input['citations'])) {
+			// Get the IDs of the publications by using their titles
+			foreach ($input['citations'] as $input_citation_title) {
+				$query = 'SELECT `id` FROM `publications` WHERE `title` LIKE :title;';
+				$this->db->prepare($query);
+				$this->db->bindValue(':title', $input_citation_title);
+				$this->db->execute();
+				$input_citation = $this->db->fetchSingle();
+				if ($input_citation) {
+					$citations[] = $input_citation['id'];
+				}
+			}
+		}
+
 		$keywords = array();
 		$keyword_model = new KeywordModel($this->db);
 		if (!empty($input['keywords'])) {
@@ -208,6 +223,10 @@ class SubmitController extends Controller {
 					$author_id = $author_model->store($author);
 					$publication_model->addAuthor($publication_id, $author_id, $priority);
 					$priority++;
+				}
+				
+				foreach ($citations as $citation_id) {
+					$publication_model->addCitation($publication_id, $citation_id);
 				}
 
 				foreach ($keywords as $keyword) {
