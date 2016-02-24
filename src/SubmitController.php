@@ -93,6 +93,13 @@ class SubmitController extends Controller {
 
 		if ($input && $format) {
 			try {
+				if ($bulkimport && filter_var($input, FILTER_VALIDATE_URL)) {
+					$input = $this->getInputFromUrl($input);
+					if ($input == false) {
+						$this->errors[] = 'Could not get content from URL.';
+						return false;
+					}
+				}
 				$entries = FormatHandler::import($input, $format);
 				if ($bulkimport) {
 					$this->bulkimport($entries);
@@ -129,6 +136,29 @@ class SubmitController extends Controller {
 		$_SESSION['input'] = $first_entry;
 	}
 
+
+	/**
+	 * 
+	 * @param string $url
+	 * @return boolean
+	 */
+	private function getInputFromUrl($url) {
+		if (ini_get('allow_url_fopen')) {
+			$sccOpts= array(
+				'http'=>array(
+					'timeout' => 200
+				)
+			);
+			$input = @file_get_contents($url, false, stream_context_create($sccOpts));
+			if ($input) {
+				return Validator::sanitizeText($input);
+			}
+		} else {
+			$this->errors[] = 'Can not get content from URL. file_get_contents is disabled by server configuration allow_url_fopen=0';
+		}
+		return false;
+	}
+	
 
 	/**
 	 * 
