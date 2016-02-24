@@ -88,12 +88,13 @@ class SubmitController extends Controller {
 	private function import(Request $request) {
 
 		$format = Validator::sanitizeText($request->post('format'));
+		$bulkimport = Validator::sanitizeBoolean($request->post('bulkimport'));
 		$input = $request->post('input');
 
 		if ($input && $format) {
 			try {
 				$entries = FormatHandler::import($input, $format);
-				if ($format === 'SCF') {
+				if ($bulkimport) {
 					$this->bulkimport($entries);
 					return true;
 				}
