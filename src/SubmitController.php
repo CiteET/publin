@@ -66,6 +66,9 @@ class SubmitController extends Controller {
 		else if ($request->get('m') === 'import') {
 			$view = new SubmitView($this->model, 'import', $this->errors);
 		}
+		else if ($request->get('m') === 'bulkimport') {
+			$view = new SubmitView($this->model, 'bulkimport', $this->errors);
+		}		
 		else {
 			unset($_SESSION['input']);
 			unset($_SESSION['input_rest']);
@@ -90,6 +93,10 @@ class SubmitController extends Controller {
 		if ($input && $format) {
 			try {
 				$entries = FormatHandler::import($input, $format);
+				if ($format === 'SCF') {
+					$this->bulkimport($entries);
+					return true;
+				}
 				$_SESSION['input_raw'] = $input;
 				$_SESSION['input_format'] = $format;
 
@@ -106,7 +113,7 @@ class SubmitController extends Controller {
 		
 		return false;
 	}
-
+	
 
 	private function setInputAndRestInSession(array $entries) {
 
@@ -122,20 +129,63 @@ class SubmitController extends Controller {
 	}
 
 
-	/** @noinspection PhpUnusedPrivateMethodInspection
-	 * @param Request $request
-	 *
-	 * @return bool
-	 * @throws \Exception
+	/**
+	 * 
+	 * @param array $entries
 	 */
-	private function submit(Request $request) {
+	private function bulkimport(array $entries) {
+		$messages = [];
+	
+		foreach ($entries as $key => $entry) {
 
-		$input = $this->model->formatPost($request->post());
-		$_SESSION['input'] = $input;
+			// Skip entry, if it has no title
+			if (empty($entry['title'])) {
+				$messages[] = '[skipped] Publication has no title';
+				continue;
+			}
+			// String for output
+			$title = substr($entry['title'], 0, 40);
+			
+			// Check publication already exists
+			$query = 'SELECT id FROM `publications` WHERE `title` LIKE :title;';
+			$this->db->prepare($query);
+			$this->db->bindValue(':title', $entry['title']);
+			$this->db->execute();
+			$id = $this->db->fetchColumn();			
+			
+			if ($id) {
+				// TODO: Store citations (!)
+				$messages[] = '[skipped] "'.$title.'" (already exists)';
+				continue;
+			}
 
+			try {
+				$entry['study_field'] = 'Computer Science';
+				if ($this->store_publication($entry)) {
+					$messages[] = '[stored] "'.$title.'"';					
+				} else {
+					$messages[] = '[failed] "'.$title.'" ('.implode(" ",$this->errors).')';
+					$this->errors = [];
+				}
+			} catch (Exception $e) {
+				// TODO, later $e->getMessage()
+				$messages[] = '[error] "'.$title.'" ('.$e.')';
+			}
+		}
+
+		$_SESSION['bulkimport_msg'] = $messages;
+	}
+
+	/**
+	 * 
+	 * @param type $input
+	 * @return boolean
+	 * @throws DBDuplicateEntryException
+	 * @throws Exception
+	 */
+	private function store_publication($input) {
 		if (empty($input['type'])) {
 			$this->errors[] = 'Publication type required';
-
 			return false;
 		}
 
@@ -147,6 +197,7 @@ class SubmitController extends Controller {
 		}
 		else {
 			$this->errors = array_merge($this->errors, $validator->getErrors());
+			return false;
 		}
 
 		$authors = array();
@@ -176,9 +227,9 @@ class SubmitController extends Controller {
 				$this->db->prepare($query);
 				$this->db->bindValue(':title', $input_citation_title);
 				$this->db->execute();
-				$input_citation = $this->db->fetchSingle();
+				$input_citation = $this->db->fetchColumn();
 				if ($input_citation) {
-					$citations[] = $input_citation['id'];
+					$citations[] = $input_citation;
 				}
 			}
 		}
@@ -210,9 +261,9 @@ class SubmitController extends Controller {
 				$this->errors = array_merge($this->errors, $validator->getErrors());
 			}
 		}
-
+		
 		if (empty($this->errors) && isset($publication)) {
-
+			
 			//$this->db->beginTransaction(); TODO there is a deadlock when enabling transactions
 
 			try {
@@ -238,18 +289,42 @@ class SubmitController extends Controller {
 					$url_model->store($url, $publication_id);
 				}
 				//$this->db->commitTransaction();
+				return true;
 			}
 			catch (DBDuplicateEntryException $e) {
-				//$this->db->cancelTransaction();
-				// TODO make single error messages for each case
-				$this->errors[] = 'A publication with this name already exists or you tried to add the same author or keyword to this publication twice';
-
-				return false;
+				throw $e;
 			}
 			catch (Exception $e) {
 				//$this->db->cancelTransaction();
 				throw $e;
 			}
+		}
+		return false;
+	}
+	
+	/** @noinspection PhpUnusedPrivateMethodInspection
+	 * @param Request $request
+	 *
+	 * @return bool
+	 * @throws \Exception
+	 */
+	private function submit(Request $request) {
+
+		$input = $this->model->formatPost($request->post());
+		$_SESSION['input'] = $input;
+		
+		$result = false;
+		try {
+			$result = $this->store_publication($input);
+		} catch (DBDuplicateEntryException $e) {
+			//$this->db->cancelTransaction();
+			// TODO make single error messages for each case
+			$this->errors[] = 'A publication with this name already exists or you tried to add the same author or keyword to this publication twice';
+
+			return false;
+		}
+
+		if (empty($this->errors) && $result) {
 
 			if ($this->next()) {
 				return true;
