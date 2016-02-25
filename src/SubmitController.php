@@ -73,6 +73,7 @@ class SubmitController extends Controller {
 			unset($_SESSION['input']);
 			unset($_SESSION['input_rest']);
 			unset($_SESSION['input_raw']);
+			unset($_SESSION['bulkimport_msg']);
 			$view = new SubmitView($this->model, 'start', $this->errors);
 		}
 
