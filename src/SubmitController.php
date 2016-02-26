@@ -67,8 +67,11 @@ class SubmitController extends Controller {
 			$view = new SubmitView($this->model, 'import', $this->errors);
 		}
 		else if ($request->get('m') === 'bulkimport') {
+			if ($request->get('url')) {
+				$this->bulkimport_api($request->get('url'));
+			}
 			$view = new SubmitView($this->model, 'bulkimport', $this->errors);
-		}		
+		}
 		else {
 			unset($_SESSION['input']);
 			unset($_SESSION['input_rest']);
@@ -103,7 +106,7 @@ class SubmitController extends Controller {
 				}
 				$entries = FormatHandler::import($input, $format);
 				if ($bulkimport) {
-					$this->bulkimport($entries);
+					$_SESSION['bulkimport_msg'] = $this->bulkimport($entries);
 					return true;
 				}
 				$_SESSION['input_raw'] = $input;
@@ -163,6 +166,34 @@ class SubmitController extends Controller {
 
 	/**
 	 * 
+	 * @param string $url
+	 */
+	private function bulkimport_api($url) {
+		$input = $this->getInputFromUrl($url);
+		if ($input == false) {
+			$error = 'Could not get content from URL.';
+		} else {
+			try {
+				$entries = FormatHandler::import($input, 'SCF');
+				
+				// Response
+				header('Content-Type: application/json');
+				http_response_code(202);
+				echo json_encode($this->bulkimport($entries));
+			} catch (Exception $e) {
+				$error = $e->getMessage();
+			}
+		}
+		
+		if ($error) {
+			http_response_code(400);
+			echo $error;
+		}
+		exit();
+	}
+	
+	/**
+	 * 
 	 * @param array $entries
 	 */
 	private function bulkimport(array $entries) {
@@ -205,7 +236,7 @@ class SubmitController extends Controller {
 			}
 		}
 
-		$_SESSION['bulkimport_msg'] = $messages;
+		return $messages;
 	}
 
 	/**
