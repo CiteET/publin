@@ -212,13 +212,23 @@ class SubmitController extends Controller {
 			}
 
 			try {
+				// TODO: improve it
+				if (!$entry['journal']) {
+					$entry['journal'] = 'Unkown';
+				}
+				if (!$entry['date']) {
+					$entry['date'] = '1970-01-01';
+				}
 				$entry['study_field'] = 'Computer Science';
+
 				if ($this->store_publication($entry)) {
 					$messages[] = '[stored] "'.$title.'"';					
 				} else {
-					$messages[] = '[failed] "'.$title.'" ('.implode(" ",$this->errors).')';
+					$messages[] = '[failed] "'.$title.'" ('.implode("; ",$this->errors).')';
 					$this->errors = [];
 				}
+			} catch (DBDuplicateEntryException $e) {
+				$messages[] = '[skipped] "'.$title.'" (DBDuplicateEntryException)';
 			} catch (Exception $e) {
 				// TODO, later $e->getMessage()
 				$messages[] = '[error] "'.$title.'" ('.$e.')';
