@@ -49,7 +49,7 @@ class SubmitController extends Controller {
 		if (!$this->auth->checkPermission(Auth::SUBMIT_PUBLICATION)) {
 			throw new PermissionRequiredException(Auth::SUBMIT_PUBLICATION);
 		}
-
+	
 		if ($request->post('action')) {
 			$method = $request->post('action');
 			if (method_exists($this, $method)) {
@@ -66,10 +66,10 @@ class SubmitController extends Controller {
 		else if ($request->get('m') === 'import') {
 			$view = new SubmitView($this->model, 'import', $this->errors);
 		}
+		else if ($request->get('m') === 'bulkimportapi') {
+			$this->bulkimportApi($request->post('input'));
+		}
 		else if ($request->get('m') === 'bulkimport') {
-			if ($request->get('url')) {
-				$this->bulkimport_api($request->get('url'));
-			}
 			$view = new SubmitView($this->model, 'bulkimport', $this->errors);
 		}
 		else {
@@ -90,7 +90,7 @@ class SubmitController extends Controller {
 	 * @return bool
 	 */
 	private function import(Request $request) {
-
+		
 		$format = Validator::sanitizeText($request->post('format'));
 		$bulkimport = Validator::sanitizeBoolean($request->post('bulkimport'));
 		$input = $request->post('input');
@@ -166,28 +166,17 @@ class SubmitController extends Controller {
 
 	/**
 	 * 
-	 * @param string $url
+	 * @param string $input
 	 */
-	private function bulkimport_api($url) {
-		$input = $this->getInputFromUrl($url);
-		if ($input == false) {
-			$error = 'Could not get content from URL.';
-		} else {
-			try {
-				$entries = FormatHandler::import($input, 'SCF');
-				
-				// Response
-				header('Content-Type: application/json');
-				http_response_code(202);
-				echo json_encode($this->bulkimport($entries));
-			} catch (Exception $e) {
-				$error = $e->getMessage();
-			}
-		}
-		
-		if ($error) {
+	private function bulkimportApi($input) {
+		try {
+			$entries = FormatHandler::import($input, 'SCF');
+			header('Content-Type: application/json');
+			http_response_code(202);
+			echo json_encode($this->bulkimport($entries));
+		} catch (Exception $e) {
 			http_response_code(400);
-			echo $error;
+			echo $e->getMessage();
 		}
 		exit();
 	}
