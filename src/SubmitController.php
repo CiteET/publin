@@ -186,7 +186,7 @@ class SubmitController extends Controller {
 	 * @param array $entries
 	 */
 	private function bulkimport(array $entries) {
-		$messages = [];
+		$messages = array();
 	
 		foreach ($entries as $key => $entry) {
 
