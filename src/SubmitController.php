@@ -187,8 +187,8 @@ class SubmitController extends Controller {
 	 */
 	private function bulkimport(array $entries) {
 		$messages = array();
-	
-		foreach ($entries as $key => $entry) {
+
+		foreach ($entries as $entry) {
 
 			// Skip entry, if it has no title
 			if (empty($entry['title'])) {
@@ -197,7 +197,7 @@ class SubmitController extends Controller {
 			}
 			// String for output
 			$title = substr($entry['title'], 0, 40);
-			
+
 			// Check publication already exists
 			$query = 'SELECT id FROM `publications` WHERE `title` LIKE :title;';
 			$this->db->prepare($query);
@@ -206,17 +206,40 @@ class SubmitController extends Controller {
 			$id = $this->db->fetchColumn();			
 			
 			if ($id) {
-				// TODO: Store citations (!)
-				$messages[] = '[skipped] "'.$title.'" (already exists)';
+				$storeCitations = false;
+
+				// Publication already exists, but the entry has citions. Hence
+				// store the citations only.
+				if (array_key_exists('citations', $entry) && !empty($entry['citations'])) {
+					$publicationModel = new PublicationModel($this->db);
+					foreach ($this->getPublicationIdsFromTitle($entry['citations']) as $citation_id) {
+						try {
+							if ($publicationModel->addCitation($id, $citation_id)) {
+								$storeCitations = true;
+							}
+						} catch (DBDuplicateEntryException $e) {
+							continue;
+						}
+					}
+				}
+				
+				// Output
+				if ($storeCitations) {
+					$messages[] = '[stored/skipped] "'.$title.'" (already exists, but store citations)';					
+				}
+				else {
+					$messages[] = '[skipped] "'.$title.'" (already exists)';					
+				}
+				// Since the publication already exsits, skip the storage
 				continue;
 			}
 
 			try {
 				// TODO: improve it
-				if (!$entry['journal']) {
+				if (!array_key_exists('journal', $entry) || empty($entry['journal'])) {
 					$entry['journal'] = 'Unkown';
 				}
-				if (!$entry['date']) {
+				if (!array_key_exists('date', $entry) || empty(!$entry['date'])) {
 					$entry['date'] = '1970-01-01';
 				}
 				$entry['study_field'] = 'Computer Science';
@@ -280,20 +303,10 @@ class SubmitController extends Controller {
 		if (empty($authors)) {
 			$this->errors[] = 'At least one author is required';
 		}
-
+		
 		$citations = array();
 		if (!empty($input['citations'])) {
-			// Get the IDs of the publications by using their titles
-			foreach ($input['citations'] as $input_citation_title) {
-				$query = 'SELECT `id` FROM `publications` WHERE `title` LIKE :title;';
-				$this->db->prepare($query);
-				$this->db->bindValue(':title', $input_citation_title);
-				$this->db->execute();
-				$input_citation = $this->db->fetchColumn();
-				if ($input_citation) {
-					$citations[] = $input_citation;
-				}
-			}
+			$citations = $this->getPublicationIdsFromTitle($input['citations']);			
 		}
 
 		$keywords = array();
@@ -362,6 +375,29 @@ class SubmitController extends Controller {
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * Gets an array with the title of publications and returns an array
+	 * with the IDs of these publications.
+	 * 
+	 * @param null|array $publicationTitles Array with the publicaion titles
+	 * @return array Array with IDs of the publications
+	 */
+	private function getPublicationIdsFromTitle(array $publicationTitles) {
+		$publicationIds = array();
+		// Get the IDs of the publications by using their titles
+		foreach ($publicationTitles as $publicationTitle) {
+			$query = 'SELECT `id` FROM `publications` WHERE `title` LIKE :title;';
+			$this->db->prepare($query);
+			$this->db->bindValue(':title', $publicationTitle);
+			$this->db->execute();
+			$id = $this->db->fetchColumn();
+			if ($id) {
+				$publicationIds[] = $id;
+			}
+		}
+		return $publicationIds;
 	}
 	
 	/** @noinspection PhpUnusedPrivateMethodInspection
