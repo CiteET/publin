@@ -239,7 +239,7 @@ class SubmitController extends Controller {
 				if (!array_key_exists('journal', $entry) || empty($entry['journal'])) {
 					$entry['journal'] = 'Unkown';
 				}
-				if (!array_key_exists('date', $entry) || empty(!$entry['date'])) {
+				if (!array_key_exists('date', $entry) || empty($entry['date'])) {
 					$entry['date'] = '1970-01-01';
 				}
 				$entry['study_field'] = 'Computer Science';
@@ -248,7 +248,7 @@ class SubmitController extends Controller {
 					$messages[] = '[stored] "'.$title.'"';					
 				} else {
 					$messages[] = '[failed] "'.$title.'" ('.implode("; ",$this->errors).')';
-					$this->errors = [];
+					$this->errors = array();
 				}
 			} catch (DBDuplicateEntryException $e) {
 				$messages[] = '[skipped] "'.$title.'" (DBDuplicateEntryException)';
