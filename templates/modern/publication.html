@@ -1,4 +1,4 @@
-<script type="text/javascript" src="./templates/modern/script/jquery.js"></script>
+<script type="text/javascript" src="<?php echo $this -> getRootUrl() ?>templates/modern/script/jquery.js"></script>
 <script type="text/javascript">
 	$(document).ready(function () {
 		$('.export textarea').hide();
@@ -308,7 +308,7 @@
 		<textarea name="abstract" id="abstract" rows="5" cols="50"><?php echo $this->showAbstract(false) ?></textarea>
 		<br/>
 		<label for="foreign">Foreign publication:</label>
-		<input type="checkbox" name="foreign" id="foreign" value="1" <?php echo $this->showForeign(false) ?>/>
+		<input type="checkbox" name="foreign" id="foreign" value="1" ><?php echo $this->showForeign(false) ?>/>
 		<br />
 		<input type="hidden" name="action" value="edit"/>
 		<input type="hidden" name="type" value="<?php echo $this->showType(false) ?>"/>
