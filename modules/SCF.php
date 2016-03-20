@@ -42,7 +42,8 @@ class SCF extends Module {
 			'doi'			=> 'doi',
 			'isbn'			=> 'isbn',
 			'keywords'		=> 'keywords',
-			'citations'		=> 'citations'
+			'citations'		=> 'citations',
+			'fieldofstudy'	=> 'study_field'
 		);
 	}
 	
