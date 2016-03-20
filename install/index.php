@@ -58,7 +58,7 @@ function db_import($sql_dump_file) {
 		try {
 			$pdo->beginTransaction();
 			$pdo->exec($sql);
-			// Study fields
+			// ISI study fields
 			$pdo->exec("INSERT INTO `study_fields` (name) VALUES ('Not Categorized');");
 			$pdo->exec("INSERT INTO `study_fields` (name) VALUES ('Agricultural Sciences');");
 			$pdo->exec("INSERT INTO `study_fields` (name) VALUES ('Biology & Biochemistry');");
